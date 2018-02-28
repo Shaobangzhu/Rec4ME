@@ -13,47 +13,61 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import entity.Item;
+import external.TicketMasterAPI;
+
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Servlet implementation class SearchItem
  */
 @WebServlet("/search")
 public class SearchItem extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-       
-    /**
-     * @see HttpServlet#HttpServlet()
-     */
-    public SearchItem() {
-        super();
-        // TODO Auto-generated constructor stub
-    }
 
 	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 * @see HttpServlet#HttpServlet()
 	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		response.setContentType("application/json");
-		response.addHeader("Access-Control-Allow-Origin", "*");
-		PrintWriter out = response.getWriter();
-		
-		JSONArray array = new JSONArray();
-
-		try {
-			array.put(new JSONObject().put("username", "abcd"));
-			array.put(new JSONObject().put("username", "1234"));
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		
-		out.print(array);
-		out.flush();
-		out.close();
+	public SearchItem() {
+		super();
+		// TODO Auto-generated constructor stub
 	}
 
 	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
+	 *      response)
 	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+
+		double lat = Double.parseDouble(request.getParameter("lat"));
+		double lon = Double.parseDouble(request.getParameter("lon"));
+		// Term can be empty or null.
+		String term = request.getParameter("term");
+		TicketMasterAPI tmAPI = new TicketMasterAPI();
+		List<Item> items = tmAPI.search(lat, lon, term);
+
+		List<JSONObject> list = new ArrayList<>();
+		try {
+			for (Item item : items) {
+				// Add a thin version of item object
+				JSONObject obj = item.toJSONObject();
+				list.add(obj);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		JSONArray array = new JSONArray(list);
+		RpcHelper.writeJsonArray(response, array);
+	}
+
+	/**
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse
+	 *      response)
+	 */
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
 		// TODO Auto-generated method stub
 		doGet(request, response);
 	}
