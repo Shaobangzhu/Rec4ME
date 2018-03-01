@@ -120,10 +120,11 @@ public class MySQLConnection implements DBConnection {
 
 			// Second, update categories table for each category
 			sql = "INSERT IGNORE INTO categories VALUES (?,?)";
+			statement = conn.prepareStatement(sql);
 			for (String category : item.getCategories()) {
-				statement = conn.prepareStatement(sql);
 				statement.setString(1, item.getItemId());
 				statement.setString(2, category);
+				statement.execute();
 			}
 
 		} catch (SQLException e) {

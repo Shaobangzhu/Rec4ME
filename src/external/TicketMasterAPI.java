@@ -159,6 +159,32 @@ public class TicketMasterAPI {
 			}
 
 			JSONObject venue = getVenue(event);
+			
+			// 解决无法插入MySQL数据库Table的问题
+			if (venue != null) {
+				StringBuilder sb = new StringBuilder();
+				if (!venue.isNull("address")) {
+					JSONObject address = venue.getJSONObject("address");
+					if (!address.isNull("line1")) {
+						sb.append(address.getString("line1"));
+					}
+					if (!address.isNull("line2")) {
+						sb.append(address.getString("line2"));
+					}
+					if (!address.isNull("line3")) {
+						sb.append(address.getString("line3"));
+					}
+					sb.append(",");
+				}
+				if (!venue.isNull("city")) {
+					JSONObject city = venue.getJSONObject("city");
+					if (!city.isNull("name")) {
+						sb.append(city.getString("name"));
+					}
+				}
+				builder.setAddress(sb.toString());
+
+			}
 
 			builder.setImageUrl(getImageUrl(event));
 			builder.setCategories(getCategories(event));
