@@ -15,34 +15,41 @@ public class Item {
 	private String imageUrl;
 	private String url;
 	private double distance;
-	
+
 	public String getItemId() {
 		return itemId;
 	}
+
 	public String getName() {
 		return name;
 	}
+
 	public double getRating() {
 		return rating;
 	}
+
 	public String getAddress() {
 		return address;
 	}
+
 	public Set<String> getCategories() {
 		return categories;
 	}
+
 	public String getImageUrl() {
 		return imageUrl;
 	}
+
 	public String getUrl() {
 		return url;
 	}
+
 	public double getDistance() {
 		return distance;
 	}
-	
+
 	/**
-	 * This is a builder pattern in Java
+	 * This is a builder pattern in Java.
 	 */
 	private Item(ItemBuilder builder) {
 		this.itemId = builder.itemId;
@@ -54,11 +61,7 @@ public class Item {
 		this.url = builder.url;
 		this.distance = builder.distance;
 	}
-	
-	/*
-	 * To convert an Item object a JSONObject instance because in our application,
-	 * front_end code cannot understand Java class, it can only understand JSON
-	 * */
+
 	public JSONObject toJSONObject() {
 		JSONObject obj = new JSONObject();
 		try {
@@ -75,7 +78,7 @@ public class Item {
 		}
 		return obj;
 	}
-	
+
 	public static class ItemBuilder {
 		private String itemId;
 		private String name;
@@ -85,34 +88,74 @@ public class Item {
 		private String imageUrl;
 		private String url;
 		private double distance;
-		
+
+		public String getItemId() {
+			return itemId;
+		}
+
 		public void setItemId(String itemId) {
 			this.itemId = itemId;
 		}
+
+		public String getName() {
+			return name;
+		}
+
 		public void setName(String name) {
 			this.name = name;
 		}
+
+		public double getRating() {
+			return rating;
+		}
+
 		public void setRating(double rating) {
 			this.rating = rating;
 		}
+
+		public String getAddress() {
+			return address;
+		}
+
 		public void setAddress(String address) {
 			this.address = address;
 		}
+
+		public Set<String> getCategories() {
+			return categories;
+		}
+
 		public void setCategories(Set<String> categories) {
 			this.categories = categories;
 		}
+
+		public String getImageUrl() {
+			return imageUrl;
+		}
+
 		public void setImageUrl(String imageUrl) {
 			this.imageUrl = imageUrl;
 		}
+
+		public String getUrl() {
+			return url;
+		}
+
 		public void setUrl(String url) {
 			this.url = url;
 		}
+
+		public double getDistance() {
+			return distance;
+		}
+
 		public void setDistance(double distance) {
 			this.distance = distance;
 		}
-		
+
 		public Item build() {
 			return new Item(this);
-		}	
+		}
+
 	}
 }

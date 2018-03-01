@@ -54,13 +54,12 @@ public interface DBConnection {
 	/**
 	 * 7.Search items near a geolocation and a term
 	 * 
-	 * @param userId
 	 * @param lat
 	 * @param lon
 	 * @param term
 	 * @return list of items
 	 */
-	public List<Item> searchItems(String userId, double lat, double lon, String term);
+	public List<Item> searchItems(double lat, double lon, String term);
 	
 	/**
 	 * 8.Save item into db.
