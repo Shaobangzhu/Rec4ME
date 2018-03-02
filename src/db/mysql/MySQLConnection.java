@@ -11,6 +11,7 @@ import java.util.Set;
 
 import db.DBConnection;
 import entity.Item;
+import entity.Item.ItemBuilder;
 import external.TicketMasterAPI;
 
 public class MySQLConnection implements DBConnection {
@@ -40,42 +41,125 @@ public class MySQLConnection implements DBConnection {
 
 	@Override
 	public void setFavoriteItems(String userId, List<String> itemIds) {
-		// TODO Auto-generated method stub
+		if (conn == null) {
+			return;
+		}
+		String query = "INSERT IGNORE INTO history(user_id, item_id)VALUE(?,?)";
+		try {
+			PreparedStatement statement = conn.prepareStatement(query);
+			for (String itemId : itemIds) {
+				statement.setString(1, userId);
+				statement.setString(2, itemId);
+				statement.execute();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 
 	}
 
 	@Override
 	public void unsetFavoriteItems(String userId, List<String> itemIds) {
-		// TODO Auto-generated method stub
+		if (conn == null) {
+			return;
+		}
+		String query = "DELETE FROM history WHERE user_id = ? and item_id = ?";
+		try {
+			PreparedStatement statement = conn.prepareStatement(query);
+			for (String itemId : itemIds) {
+				statement.setString(1, userId);
+				statement.setString(2, itemId);
+				statement.execute();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 
 	}
 
 	@Override
 	public Set<String> getFavoriteItemIds(String userId) {
-		// TODO Auto-generated method stub
-		return null;
+		if (conn == null) {
+			return new HashSet<>();
+		}
+		Set<String> favoriteItems = new HashSet<>();
+		try {
+			String sql = "SELECT item_id from history WHERE user_id = ?";
+			PreparedStatement statement = conn.prepareStatement(sql);
+			statement.setString(1, userId);
+			ResultSet rs = statement.executeQuery();
+			while (rs.next()) {
+				String itemId = rs.getString("item_id");
+				favoriteItems.add(itemId);
+			}
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return favoriteItems;
 	}
 
 	@Override
 	public Set<Item> getFavoriteItems(String userId) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		if (conn == null) {
+			return new HashSet<>();
+		}
+		Set<String> itemIds = getFavoriteItemIds(userId);
+		Set<Item> favoriteItems = new HashSet<>();
+		try {
+			for (String itemId : itemIds) {
+				String sql = "SELECT * from items WHERE item_id = ?";
+				PreparedStatement statement = conn.prepareStatement(sql);
+				statement.setString(1, itemId);
+				ResultSet rs = statement.executeQuery();
+				ItemBuilder builder = new ItemBuilder();
+				
+				// Because itemId is unique and given one item id there should
+				// have only one result returned.
+				if (rs.next()) {
+					builder.setItemId(rs.getString("item_id"));
+					builder.setName(rs.getString("name"));
+					builder.setRating(rs.getDouble("rating"));
+					builder.setAddress(rs.getString("address"));
+					builder.setImageUrl(rs.getString("image_url"));
+					builder.setUrl(rs.getString("url"));
+					builder.setCategories(getCategories(itemId));
+				}
+				favoriteItems.add(builder.build());
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return favoriteItems;
 	}
 
 	@Override
 	public Set<String> getCategories(String itemId) {
-		// TODO Auto-generated method stub
-		return null;
+		if(conn == null) {
+			return null;
+		}
+		
+		Set<String> categories = new HashSet<>();
+		try {
+			String sql = "SELECT category from categories WHERE item_id = ?";
+			PreparedStatement statement = conn.prepareStatement(sql);
+			statement.setString(1, itemId);
+			ResultSet rs = statement.executeQuery();
+			while (rs.next()) {
+				categories.add(rs.getString("category"));
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		return categories;
 	}
 
 	@Override
 	public List<Item> searchItems(double lat, double lon, String term) {
 		TicketMasterAPI tmAPI = new TicketMasterAPI();
-		// DEBUG: 测试坐标是否正确获取 | 结果:可以获取
-		// System.out.println("lat = " + lat + "lon = " + lon);
 		List<Item> items = tmAPI.search(lat, lon, term);
-		// DEBUG: 测试items是否为null | 结果:item不为null
-		// System.out.println("items = " + items);
 		for (Item item : items) {
 			// Save the item into your own db
 			saveItem(item);
@@ -101,23 +185,6 @@ public class MySQLConnection implements DBConnection {
 			statement.setDouble(7, item.getDistance());
 			statement.execute();
 
-			// DEBUG: 是否能从item里解析数据
-			// System.out.println("ItemId = " + item.getItemId());
-			// System.out.println("Name = " + item.getName());
-			// System.out.println("Rating = " + item.getRating());
-			// System.out.println("Address = " + item.getAddress());
-			// System.out.println("Url = " + item.getUrl());
-			// System.out.println("Distance = " + item.getDistance());
-			
-			// DEBUG: 显示不出图片的原因也已经定位完毕，getImageUrl()返回了null
-			// 解决方法: 在TicketMasterAPI里，填满getImageUrl() helper function
-			// 修改了helper function，解决了原先helper function无法返回image url的问题，因为原先打字打错了把images打成了image
-			// System.out.println("ImageUrl = " + item.getImageUrl());
-			
-			// DEBUG: 问题定位完成，原因在于item.getCategories()返回了null
-			// 解决方法: 在TicketMasterAPI里，填满getCategories() helper function
-			// System.out.println("Categories = " + item.getCategories());
-
 			// Second, update categories table for each category
 			sql = "INSERT IGNORE INTO categories VALUES (?,?)";
 			statement = conn.prepareStatement(sql);
@@ -135,13 +202,42 @@ public class MySQLConnection implements DBConnection {
 
 	@Override
 	public String getFullname(String userId) {
-		// TODO Auto-generated method stub
-		return null;
+		if (conn == null) {
+			return null;
+		}
+		String name = "";
+		try {
+			String sql = "SELECT first_name, last_name from users WHERE user_id = ?";
+			PreparedStatement statement = conn.prepareStatement(sql);
+			statement.setString(1, userId);
+			ResultSet rs = statement.executeQuery();
+			if (rs.next()) {
+				name = String.join("", rs.getString("first_name"), rs.getString("last_name"));
+			}
+			
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		return name;
 	}
 
 	@Override
 	public boolean verifyLogin(String userId, String password) {
-		// TODO Auto-generated method stub
+		if (conn == null) {
+			return false;
+		}
+		try {
+			String sql = "SELECT user_id from users WHERE user_id = ? and password = ?";
+			PreparedStatement statement = conn.prepareStatement(sql);
+			statement.setString(1, userId);
+			statement.setString(2, password);
+			ResultSet rs = statement.executeQuery();
+			if (rs.next()) {
+				return true;
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
 		return false;
 	}
 

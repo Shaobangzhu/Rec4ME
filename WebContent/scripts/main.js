@@ -17,8 +17,6 @@
         $('fav-btn').addEventListener('click', loadFavoriteItems);
         $('recommend-btn').addEventListener('click', loadRecommendedItems);
 
-        var welcomeMsg = $('welcome-msg');
-        welcomeMsg.innerHTML = 'Welcome, ' + user_fullname;
         initGeoLocation();
     }
 
@@ -154,11 +152,11 @@
         xhr.open(method, url, true);
 
         xhr.onload = function() {
-        	if (xhr.status === 200) {
-        		callback(xhr.responseText);
-        	} else {
-        		errorHandler();
-        	}
+            if (xhr.status === 200) {
+                callback(xhr.responseText);
+            } else {
+                errorHandler();
+            }
         };
 
         xhr.onerror = function() {
